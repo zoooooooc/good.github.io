@@ -103,7 +103,7 @@
       text-shadow: 0 0 5px rgba(255, 215, 0, 0.6);
     }
 
-    /* 調整為 6 格以容納新數據 */
+    /* Dashboard */
     .dashboard {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -146,6 +146,7 @@
       border-radius: 14px;
       padding: 6px;
       box-shadow: 0 0 30px rgba(255, 140, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.95);
+      transition: transform 0.05s ease;
     }
 
     .grid-container {
@@ -232,7 +233,6 @@
       gap: 8px;
     }
 
-    /* 下拉式選單樣式 */
     .bet-select-wrapper {
       display: flex;
       align-items: center;
@@ -314,7 +314,6 @@
       opacity: 0.6;
     }
 
-    /* 外掛控制區 */
     .cheat-panel {
       width: 100%;
       background: rgba(15, 0, 5, 0.9);
@@ -426,7 +425,7 @@
     </div>
   </div>
 
-  <!-- 新增連動資訊看板：未進FG轉數 & 當前消除金額 -->
+  <!-- 資訊看板 -->
   <div class="dashboard">
     <div class="info-card">
       <span class="label">持有金幣</span>
@@ -479,22 +478,21 @@
   </div>
 
   <div class="control-panel">
-    <!-- 下拉式押金選單 -->
     <div class="bet-select-wrapper">
       <label for="betDropdown">押注金額:</label>
       <select class="bet-select" id="betDropdown">
         <option value="10">10</option>
         <option value="20" selected>20</option>
-		<option value="200">200</option>
+        <option value="200">200</option>
         <option value="500">500</option>
         <option value="1000">1000</option>
         <option value="5000">5000</option>
         <option value="10000">10000</option>
-		<option value="20000">20000</option>
-		<option value="50000">50000</option>
-		<option value="100000">100000</option>
-		<option value="200000">200000</option>
-		<option value="500000">500000</option>
+        <option value="20000">20000</option>
+        <option value="50000">50000</option>
+        <option value="100000">100000</option>
+        <option value="200000">200000</option>
+        <option value="500000">500000</option>
         <option value="1000000">1000000</option>
       </select>
     </div>
@@ -626,9 +624,7 @@
   const CONFIG = {
     cols: 6,
     rows: 5,
-    // Jackpot 基礎底池
     jpBase: { GRAND: 40000, MAJOR: 10000, MINOR: 2000, MINI: 400 },
-    // 投注抽水比例 (1.5%) 拆分給各級 Jackpot
     jpContribution: { GRAND: 0.0075, MAJOR: 0.00375, MINOR: 0.00225, MINI: 0.0015 }
   };
 
@@ -638,14 +634,13 @@
       this.currentBet = 20;
       this.freeSpins = 0;
       this.totalMultiplier = 1;
-      this.noFreeCount = 0; // 未進FG轉數
-      this.currentWin = 0;   // 當前消除金額
+      this.noFreeCount = 0;
+      this.currentWin = 0;
       this.gridData = [];
       this.isSpinning = false;
       this.isAutoSpin = false;
       this.cheatMode = null;
 
-      // Progressive Jackpot 當前彩金累積池 (初始化為底池)
       this.jackpots = { ...CONFIG.jpBase };
 
       this.sound = new SoundController();
@@ -698,13 +693,11 @@
         this.toggleAutoSpin();
       });
 
-      // 下拉選單切換押注
       this.dom.betDropdown.addEventListener('change', (e) => {
         this.currentBet = parseFloat(e.target.value);
         this.updateUI();
       });
 
-      // 外掛功能
       this.dom.cheatScatter.addEventListener('click', () => {
         this.cheatMode = 'SCATTER';
         alert('外掛生效：下局觸發 4x Scatter 免費遊戲！');
@@ -775,14 +768,12 @@
       this.dom.freeSpins.textContent = this.freeSpins;
       this.dom.totalMultiplier.textContent = `x${this.totalMultiplier}`;
 
-      // 漸進式 Jackpot 動態顯示
       this.dom.jpGrand.textContent = Math.floor(this.jackpots.GRAND).toLocaleString();
       this.dom.jpMajor.textContent = Math.floor(this.jackpots.MAJOR).toLocaleString();
       this.dom.jpMinor.textContent = Math.floor(this.jackpots.MINOR).toLocaleString();
       this.dom.jpMini.textContent = Math.floor(this.jackpots.MINI).toLocaleString();
     }
 
-    // 累積投注進 Jackpot 獎池
     accumulateJackpot(bet) {
       this.jackpots.GRAND += bet * CONFIG.jpContribution.GRAND;
       this.jackpots.MAJOR += bet * CONFIG.jpContribution.MAJOR;
@@ -801,9 +792,8 @@
         }
         this.balance -= this.currentBet;
         this.totalMultiplier = 1;
-        this.noFreeCount++; // 普通旋轉時未進 FG 次數 +1
+        this.noFreeCount++;
 
-        // 將部分押金累加至 Jackpot 獎池
         this.accumulateJackpot(this.currentBet);
       } else {
         this.freeSpins--;
@@ -825,7 +815,6 @@
       this.dom.betDropdown.disabled = false;
       this.updateUI();
 
-      // 自動旋轉處理
       if (this.isAutoSpin) {
         if (this.balance >= this.currentBet || this.freeSpins > 0) {
           setTimeout(() => this.spin(), 500);
@@ -886,7 +875,6 @@
       let combo = 0;
       let totalBaseWin = 0;
 
-      // 1. 連鎖消除
       while (true) {
         const counts = {};
         this.gridData.forEach(item => {
@@ -928,14 +916,12 @@
         await this.delay(450);
 
         totalBaseWin += stepWin;
-        // 即時更新「當前消除金額」
         this.currentWin = totalBaseWin;
         this.updateUI();
 
         await this.clearAndDrop(winningIds);
       }
 
-      // 2. 倍數球計算
       let roundTotalWin = 0;
       if (totalBaseWin > 0) {
         let roundMultiplier = 0;
@@ -954,7 +940,6 @@
         }
 
         roundTotalWin = totalBaseWin * this.totalMultiplier;
-        // 更新最終乘以倍數後的「當前消除金額」
         this.currentWin = roundTotalWin;
         this.updateUI();
       } else {
@@ -963,7 +948,6 @@
         }
       }
 
-      // 3. Progressive Jackpot 彩金判定
       let jpWin = 0;
       if (this.cheatMode === 'JACKPOT' || Math.random() < 0.005) {
         jpWin = await this.triggerJackpot();
@@ -975,12 +959,11 @@
         if (jpWin <= 0) await this.showBigWin(finalRoundWin);
       }
 
-      // 4. 檢查 Scatter 與免費遊戲觸發
       const scatterCount = this.gridData.filter(s => s && s.isScatter).length;
       if (scatterCount >= 4) {
         this.sound.playScatter();
         this.freeSpins += 15;
-        this.noFreeCount = 0; // 成功進 FG，未進 FG 轉數重置為 0
+        this.noFreeCount = 0;
         this.dom.freeOverlayText.textContent = "獲得 15 次免費旋轉！";
         await this.showOverlay(this.dom.freeOverlay, 2000);
       } else if (this.freeSpins > 0 && scatterCount >= 3) {
@@ -1004,9 +987,7 @@
         else if (rand < 0.50) type = 'MINOR';
       }
 
-      // 贏得目前累積池中的彩金金額
       const winAmount = this.jackpots[type];
-      // 該等級 Jackpot 歸零重置為底池金額
       this.jackpots[type] = CONFIG.jpBase[type];
 
       this.sound.playBigWin();
@@ -1060,23 +1041,26 @@
 
     shakeScreen() {
       this.dom.wrapper.style.transform = `translate(${(Math.random()-0.5)*8}px, ${(Math.random()-0.5)*8}px)`;
-      setTimeout(() => this.dom.wrapper.style.transform = 'none', 80);
+      setTimeout(() => {
+        this.dom.wrapper.style.transform = 'translate(0, 0)';
+      }, 50);
     }
 
     async showBigWin(amount) {
-      if (amount <= 0) return;
+      if (amount < this.currentBet * 5) return;
       this.sound.playBigWin();
-      this.particles.spawnConfetti();
-      this.dom.winTitle.textContent = amount >= this.currentBet * 50 ? 'MEGA WIN!' : 'BIG WIN!';
+      this.particles.spawnConfetti(60);
+
+      this.dom.winTitle.textContent = amount >= this.currentBet * 20 ? 'MEGA WIN!' : 'BIG WIN!';
       this.dom.winAmount.textContent = `+${Math.floor(amount).toLocaleString()}`;
-      await this.showOverlay(this.dom.bigWinOverlay, 2000);
+      await this.showOverlay(this.dom.bigWinOverlay, 1800);
     }
 
-    showOverlay(overlayElem, duration) {
+    showOverlay(overlayEl, duration = 2000) {
       return new Promise(resolve => {
-        overlayElem.classList.add('active');
+        overlayEl.classList.add('active');
         setTimeout(() => {
-          overlayElem.classList.remove('active');
+          overlayEl.classList.remove('active');
           resolve();
         }, duration);
       });
@@ -1087,10 +1071,12 @@
     }
   }
 
+  // 初始化遊戲
   window.addEventListener('DOMContentLoaded', () => {
     new SlotGame();
   });
 })();
 </script>
+
 </body>
 </html>
