@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>戰神賽特 - Progressive Jackpot 終極版</title>
+  
+  <style>
+    :root {
+      --bg-dark: #050201;
+      --gold-primary: #ffd700;
+      --gold-secondary: #ff8c00;
+      --gold-light: #fffdeb;
+      --panel-bg: rgba(15, 6, 3, 0.94);
+      --border-gold: rgba(255, 215, 0, 0.6);
+      --font-main: "Cinzel", "PingFang TC", "Microsoft JhengHei", serif;
+      --glow-red: #ff0055;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #2e1203 0%, var(--bg-dark) 90%);
+      color: #ffffff;
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 880px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .header text {
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(180deg, #ffffff 0%, var(--gold-primary) 45%, var(--gold-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(255, 140, 0, 0.8));
+      letter-spacing: 4px;
+      text-align: center;
+    }
+
+    /* Progressive Jackpot 頂部顯示列 */
+    .jackpot-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+
+    .jp-card {
+      background: linear-gradient(180deg, rgba(40, 15, 5, 0.9), rgba(10, 3, 1, 0.95));
+      border: 1.5px solid var(--gold-primary);
+      border-radius: 6px;
+      padding: 4px;
+      text-align: center;
+      box-shadow: inset 0 0 8px rgba(255, 215, 0, 0.2);
+    }
+
+    .jp-card.grand { border-color: #ff2200; box-shadow: 0 0 10px rgba(255, 34, 0, 0.5); }
+    .jp-card.major { border-color: #ff9900; }
+    .jp-card.minor { border-color: #00ccff; }
+    .jp-card.mini { border-color: #00ff66; }
+
+    .jp-title {
+      font-size: 0.65rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .jp-card.grand .jp-title { color: #ff5555; }
+    .jp-card.major .jp-title { color: #ffbb33; }
+    .jp-card.minor .jp-title { color: #33ddff; }
+    .jp-card.mini .jp-title { color: #33ff88; }
+
+    .jp-val {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--gold-light);
+      text-shadow: 0 0 5px rgba(255, 215, 0, 0.6);
+    }
+
+    /* 調整為 6 格以容納新數據 */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      width: 100%;
+      background: var(--panel-bg);
+      border: 1.5px solid var(--border-gold);
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .info-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .info-card .label {
+      font-size: 0.65rem;
+      color: #d0b090;
+      white-space: nowrap;
+    }
+
+    .info-card .value {
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--gold-light);
+    }
+
+    .slot-machine-wrapper {
+      position: relative;
+      width: 100%;
+      background: var(--panel-bg);
+      border: 3px solid var(--gold-primary);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: 0 0 30px rgba(255, 140, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.95);
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 5px;
+      width: 100%;
+      aspect-ratio: 6 / 5;
+    }
+
+    .symbol-cell {
+      position: relative;
+      background: radial-gradient(circle, rgba(60, 28, 8, 0.9) 0%, rgba(15, 6, 2, 0.95) 100%);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .symbol-img {
+      width: 82%;
+      height: 82%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+      pointer-events: none;
+    }
+
+    .symbol-cell.win-glow {
+      animation: winPulse 0.4s infinite alternate ease-in-out;
+      border-color: #ffffff;
+      z-index: 5;
+    }
+
+    .symbol-cell.win-glow .symbol-img {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 12px var(--gold-primary));
+    }
+
+    @keyframes winPulse {
+      0% { transform: scale(1); box-shadow: 0 0 8px var(--gold-primary); }
+      100% { transform: scale(1.05); box-shadow: 0 0 20px #ffffff, inset 0 0 12px var(--gold-light); }
+    }
+
+    .symbol-cell.drop-anim {
+      animation: dropDown 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    @keyframes dropDown {
+      0% { transform: translateY(-80px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .symbol-cell.pop-out {
+      animation: popOut 0.2s forwards ease-in;
+    }
+
+    @keyframes popOut {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .multiplier-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      background: linear-gradient(135deg, #ff0055 0%, #ff7700 100%);
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #ffffff;
+      z-index: 6;
+    }
+
+    .control-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      gap: 8px;
+    }
+
+    /* 下拉式選單樣式 */
+    .bet-select-wrapper {
+      display: flex;
+      align-items: center;
+      background: var(--panel-bg);
+      border: 1.5px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+
+    .bet-select-wrapper label {
+      font-size: 0.8rem;
+      color: var(--gold-primary);
+      margin-right: 6px;
+      font-weight: bold;
+    }
+
+    .bet-select {
+      background: #1a0b04;
+      color: var(--gold-light);
+      border: 1px solid var(--gold-primary);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .bet-select option {
+      background: #0f0603;
+      color: var(--gold-light);
+    }
+
+    .btn-action-group {
+      display: flex;
+      flex: 1;
+      gap: 8px;
+    }
+
+    .btn-spin, .btn-auto {
+      height: 44px;
+      border-radius: 8px;
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      transition: all 0.15s ease;
+    }
+
+    .btn-spin {
+      flex: 2;
+      background: linear-gradient(180deg, #ffea00 0%, #ff4500 100%);
+      color: #000;
+      box-shadow: 0 0 12px rgba(255, 69, 0, 0.6);
+    }
+
+    .btn-auto {
+      flex: 1;
+      background: linear-gradient(180deg, #00d2ff 0%, #0040ff 100%);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(0, 64, 255, 0.6);
+    }
+
+    .btn-auto.active {
+      background: linear-gradient(180deg, #ff0055 0%, #990022 100%);
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.8);
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.8; }
+      100% { opacity: 1; }
+    }
+
+    .btn-spin:disabled, .btn-auto:disabled, .bet-select:disabled {
+      filter: grayscale(0.8);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* 外掛控制區 */
+    .cheat-panel {
+      width: 100%;
+      background: rgba(15, 0, 5, 0.9);
+      border: 1px dashed var(--glow-red);
+      border-radius: 8px;
+      padding: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cheat-panel label {
+      color: var(--glow-red);
+      font-weight: bold;
+      font-size: 0.75rem;
+    }
+
+    .btn-cheat {
+      background: #2a0813;
+      color: #ff77a8;
+      border: 1px solid var(--glow-red);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-cheat:hover {
+      background: var(--glow-red);
+      color: #fff;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.88);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .overlay.active { opacity: 1; pointer-events: auto; }
+
+    .overlay-title {
+      font-size: 2.3rem;
+      font-weight: 900;
+      background: linear-gradient(180deg, #ffffff 0%, var(--gold-primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+      animation: bounce 0.5s infinite alternate ease-in-out;
+    }
+
+    .overlay-subtitle {
+      font-size: 1.4rem;
+      color: var(--gold-light);
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-10px); }
+    }
+
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 99;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="effectsCanvas"></canvas>
+
+<div class="game-container">
+  <div class="header">
+    <h1>戰神賽特 (Progressive Jackpot 漸進版)</h1>
+  </div>
+
+  <!-- Progressive Jackpot 派彩看板 -->
+  <div class="jackpot-bar">
+    <div class="jp-card grand">
+      <div class="jp-title">GRAND</div>
+      <div class="jp-val" id="jpGrand">40,000</div>
+    </div>
+    <div class="jp-card major">
+      <div class="jp-title">MAJOR</div>
+      <div class="jp-val" id="jpMajor">10,000</div>
+    </div>
+    <div class="jp-card minor">
+      <div class="jp-title">MINOR</div>
+      <div class="jp-val" id="jpMinor">2,000</div>
+    </div>
+    <div class="jp-card mini">
+      <div class="jp-title">MINI</div>
+      <div class="jp-val" id="jpMini">400</div>
+    </div>
+  </div>
+
+  <!-- 新增連動資訊看板：未進FG轉數 & 當前消除金額 -->
+  <div class="dashboard">
+    <div class="info-card">
+      <span class="label">持有金幣</span>
+      <span class="value" id="balance">10,000</span>
+    </div>
+    <div class="info-card">
+      <span class="label">當前消除金額</span>
+      <span class="value" id="currentWin">0</span>
+    </div>
+    <div class="info-card">
+      <span class="label">當前連鎖</span>
+      <span class="value" id="comboCount">0</span>
+    </div>
+    <div class="info-card">
+      <span class="label">未進 FG 轉數</span>
+      <span class="value" id="noFreeCount">0</span>
+    </div>
+    <div class="info-card">
+      <span class="label">免費局數</span>
+      <span class="value" id="freeSpins">0</span>
+    </div>
+    <div class="info-card">
+      <span class="label">累積倍數</span>
+      <span class="value" id="totalMultiplier">x1</span>
+    </div>
+  </div>
+
+  <!-- 外掛控制面板 -->
+  <div class="cheat-panel">
+    <label>⚡ DEV/外掛功能：</label>
+    <button class="btn-cheat" id="cheatScatter">下局免費遊戲 (4x Scatter)</button>
+    <button class="btn-cheat" id="cheatMult">下局高倍數球 (500X)</button>
+    <button class="btn-cheat" id="cheatJP">下局必爆 Jackpot</button>
+    <button class="btn-cheat" id="cheatEyes">滿盤眼睛爆發</button>
+    <button class="btn-cheat" id="cheatAddMoney">+100,000 金幣</button>
+  </div>
+
+  <div class="slot-machine-wrapper" id="machineWrapper">
+    <div class="grid-container" id="grid"></div>
+
+    <div class="overlay" id="freeOverlay">
+      <div class="overlay-title">進入免費遊戲！</div>
+      <div class="overlay-subtitle" id="freeOverlayText">獲得 15 次免費旋轉</div>
+    </div>
+
+    <div class="overlay" id="bigWinOverlay">
+      <div class="overlay-title" id="winTitle">BIG WIN!</div>
+      <div class="overlay-subtitle" id="winAmount">+0</div>
+    </div>
+  </div>
+
+  <div class="control-panel">
+    <!-- 下拉式押金選單 -->
+    <div class="bet-select-wrapper">
+      <label for="betDropdown">押注金額:</label>
+      <select class="bet-select" id="betDropdown">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+		<option value="200">200</option>
+        <option value="500">500</option>
+        <option value="1000">1000</option>
+        <option value="5000">5000</option>
+        <option value="10000">10000</option>
+		<option value="20000">20000</option>
+		<option value="50000">50000</option>
+		<option value="100000">100000</option>
+		<option value="200000">200000</option>
+		<option value="500000">500000</option>
+        <option value="1000000">1000000</option>
+      </select>
+    </div>
+    
+    <div class="btn-action-group">
+      <button class="btn-spin" id="btnSpin">旋 轉</button>
+      <button class="btn-auto" id="btnAuto">自動旋轉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+(() => {
+  class SoundController {
+    constructor() { this.ctx = null; }
+
+    init() {
+      if (!this.ctx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+      }
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+    }
+
+    playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.1) {
+      if (!this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    playSpin() { this.playTone(260, 'triangle', 0.03, 0.04); }
+    playWin(combo = 1) { 
+      const freq = 440 * Math.pow(1.06, Math.min(combo, 12));
+      this.playTone(freq, 'sine', 0.2, 0.1); 
+    }
+    playScatter() { 
+      this.playTone(587.33, 'square', 0.15, 0.12);
+      setTimeout(() => this.playTone(880, 'square', 0.25, 0.15), 100);
+    }
+    playBigWin() {
+      if (!this.ctx) return;
+      [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f, i) => {
+        setTimeout(() => this.playTone(f, 'triangle', 0.3, 0.15), i * 80);
+      });
+    }
+  }
+
+  class ParticleSystem {
+    constructor(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.particles = [];
+      this.resize();
+      window.addEventListener('resize', () => this.resize());
+      this.loop();
+    }
+
+    resize() {
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+    }
+
+    spawnConfetti(count = 80) {
+      for (let i = 0; i < count; i++) {
+        this.particles.push({
+          x: this.canvas.width / 2,
+          y: this.canvas.height / 2,
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.7) * 16,
+          size: Math.random() * 8 + 4,
+          color: `hsl(${Math.random() * 50 + 10}, 100%, 55%)`,
+          alpha: 1,
+          decay: Math.random() * 0.015 + 0.008,
+          rotation: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.2
+        });
+      }
+    }
+
+    loop() {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.22;
+        p.alpha -= p.decay;
+        p.rotation += p.vRot;
+
+        this.ctx.save();
+        this.ctx.translate(p.x, p.y);
+        this.ctx.rotate(p.rotation);
+        this.ctx.fillStyle = p.color;
+        this.ctx.globalAlpha = Math.max(0, p.alpha);
+        this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        this.ctx.restore();
+
+        if (p.alpha <= 0) this.particles.splice(i, 1);
+      }
+      requestAnimationFrame(() => this.loop());
+    }
+  }
+
+  const SYMBOLS = [
+    { id: 'S1', name: '眼睛', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-eye-of-horus-150x128.webp', pays: { 8: 10, 10: 25, 12: 100 } },
+    { id: 'S2', name: '權杖', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-scepter-150x128.webp', pays: { 8: 5, 10: 15, 12: 50 } },
+    { id: 'S3', name: '弓箭', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-bow-150x128.webp', pays: { 8: 2, 10: 5, 12: 15 } },
+    { id: 'S4', name: '彎刀', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-scimitar-150x128.webp', pays: { 8: 1.5, 10: 3, 12: 10 } },
+    { id: 'S5', name: '黃寶石', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-orange-gem-150x128.webp', pays: { 8: 1, 10: 2, 12: 5 } },
+    { id: 'S6', name: '紅寶石', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-ruby-150x128.webp', pays: { 8: 0.5, 10: 1, 12: 2 } },
+    { id: 'S7', name: '紫寶石', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-amethyst-150x128.webp', pays: { 8: 0.5, 10: 1, 12: 2 } },
+    { id: 'S8', name: '藍寶石', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-sapphire-150x128.webp', pays: { 8: 0.4, 10: 0.8, 12: 1.5 } },
+    { id: 'S9', name: '綠寶石', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/seth-symbols-emerald-150x128.webp', pays: { 8: 0.25, 10: 0.5, 12: 1 } },
+    { id: 'SCATTER', name: '聖甲蟲', image: 'https://blog.8o8.tw/wp-content/uploads/2024/12/god-of-war-set-multiple-symbol-scarab.webp', isScatter: true },
+    { id: 'MULT', name: '倍數球', image: 'https://www.戰神賽特.com/function_bar/multi/multi_red.webp', isMultiplier: true }
+  ];
+
+  const CONFIG = {
+    cols: 6,
+    rows: 5,
+    // Jackpot 基礎底池
+    jpBase: { GRAND: 40000, MAJOR: 10000, MINOR: 2000, MINI: 400 },
+    // 投注抽水比例 (1.5%) 拆分給各級 Jackpot
+    jpContribution: { GRAND: 0.0075, MAJOR: 0.00375, MINOR: 0.00225, MINI: 0.0015 }
+  };
+
+  class SlotGame {
+    constructor() {
+      this.balance = 10000;
+      this.currentBet = 20;
+      this.freeSpins = 0;
+      this.totalMultiplier = 1;
+      this.noFreeCount = 0; // 未進FG轉數
+      this.currentWin = 0;   // 當前消除金額
+      this.gridData = [];
+      this.isSpinning = false;
+      this.isAutoSpin = false;
+      this.cheatMode = null;
+
+      // Progressive Jackpot 當前彩金累積池 (初始化為底池)
+      this.jackpots = { ...CONFIG.jpBase };
+
+      this.sound = new SoundController();
+      this.particles = new ParticleSystem(document.getElementById('effectsCanvas'));
+
+      this.cacheDOM();
+      this.bindEvents();
+      this.initGrid();
+      this.updateUI();
+    }
+
+    cacheDOM() {
+      this.dom = {
+        grid: document.getElementById('grid'),
+        wrapper: document.getElementById('machineWrapper'),
+        balance: document.getElementById('balance'),
+        currentWin: document.getElementById('currentWin'),
+        comboCount: document.getElementById('comboCount'),
+        noFreeCount: document.getElementById('noFreeCount'),
+        freeSpins: document.getElementById('freeSpins'),
+        totalMultiplier: document.getElementById('totalMultiplier'),
+        betDropdown: document.getElementById('betDropdown'),
+        btnSpin: document.getElementById('btnSpin'),
+        btnAuto: document.getElementById('btnAuto'),
+        freeOverlay: document.getElementById('freeOverlay'),
+        freeOverlayText: document.getElementById('freeOverlayText'),
+        bigWinOverlay: document.getElementById('bigWinOverlay'),
+        winTitle: document.getElementById('winTitle'),
+        winAmount: document.getElementById('winAmount'),
+        jpGrand: document.getElementById('jpGrand'),
+        jpMajor: document.getElementById('jpMajor'),
+        jpMinor: document.getElementById('jpMinor'),
+        jpMini: document.getElementById('jpMini'),
+        cheatScatter: document.getElementById('cheatScatter'),
+        cheatMult: document.getElementById('cheatMult'),
+        cheatJP: document.getElementById('cheatJP'),
+        cheatEyes: document.getElementById('cheatEyes'),
+        cheatAddMoney: document.getElementById('cheatAddMoney')
+      };
+    }
+
+    bindEvents() {
+      this.dom.btnSpin.addEventListener('click', () => {
+        this.sound.init();
+        this.spin();
+      });
+
+      this.dom.btnAuto.addEventListener('click', () => {
+        this.sound.init();
+        this.toggleAutoSpin();
+      });
+
+      // 下拉選單切換押注
+      this.dom.betDropdown.addEventListener('change', (e) => {
+        this.currentBet = parseFloat(e.target.value);
+        this.updateUI();
+      });
+
+      // 外掛功能
+      this.dom.cheatScatter.addEventListener('click', () => {
+        this.cheatMode = 'SCATTER';
+        alert('外掛生效：下局觸發 4x Scatter 免費遊戲！');
+      });
+      this.dom.cheatMult.addEventListener('click', () => {
+        this.cheatMode = 'MULT_500';
+        alert('外掛生效：下局出現 500X 倍數球！');
+      });
+      this.dom.cheatJP.addEventListener('click', () => {
+        this.cheatMode = 'JACKPOT';
+        alert('外掛生效：下局必爆 GRAND Jackpot！');
+      });
+      this.dom.cheatEyes.addEventListener('click', () => {
+        this.cheatMode = 'EYES';
+        alert('外掛生效：下局滿盤眼睛爆發！');
+      });
+      this.dom.cheatAddMoney.addEventListener('click', () => {
+        this.balance += 100000;
+        this.updateUI();
+      });
+    }
+
+    toggleAutoSpin() {
+      this.isAutoSpin = !this.isAutoSpin;
+      if (this.isAutoSpin) {
+        this.dom.btnAuto.classList.add('active');
+        this.dom.btnAuto.textContent = '停止自動';
+        if (!this.isSpinning) this.spin();
+      } else {
+        this.stopAutoSpin();
+      }
+    }
+
+    stopAutoSpin() {
+      this.isAutoSpin = false;
+      this.dom.btnAuto.classList.remove('active');
+      this.dom.btnAuto.textContent = '自動旋轉';
+    }
+
+    initGrid() {
+      this.dom.grid.innerHTML = '';
+      this.gridData = [];
+      for (let i = 0; i < CONFIG.cols * CONFIG.rows; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'symbol-cell';
+        this.dom.grid.appendChild(cell);
+        this.gridData.push(null);
+      }
+    }
+
+    getRandomSymbol() {
+      const rand = Math.random();
+      if (rand < 0.035) return SYMBOLS.find(s => s.id === 'SCATTER');
+      if (rand < 0.08) {
+        const mult = SYMBOLS.find(s => s.id === 'MULT');
+        const values = [2, 3, 5, 8, 10, 15, 25, 50, 100, 250, 500];
+        const val = values[Math.floor(Math.random() * values.length)];
+        return { ...mult, val };
+      }
+      const normals = SYMBOLS.filter(s => !s.isScatter && !s.isMultiplier);
+      return normals[Math.floor(Math.random() * normals.length)];
+    }
+
+    updateUI() {
+      this.dom.balance.textContent = Math.floor(this.balance).toLocaleString();
+      this.dom.currentWin.textContent = Math.floor(this.currentWin).toLocaleString();
+      this.dom.noFreeCount.textContent = this.noFreeCount;
+      this.dom.freeSpins.textContent = this.freeSpins;
+      this.dom.totalMultiplier.textContent = `x${this.totalMultiplier}`;
+
+      // 漸進式 Jackpot 動態顯示
+      this.dom.jpGrand.textContent = Math.floor(this.jackpots.GRAND).toLocaleString();
+      this.dom.jpMajor.textContent = Math.floor(this.jackpots.MAJOR).toLocaleString();
+      this.dom.jpMinor.textContent = Math.floor(this.jackpots.MINOR).toLocaleString();
+      this.dom.jpMini.textContent = Math.floor(this.jackpots.MINI).toLocaleString();
+    }
+
+    // 累積投注進 Jackpot 獎池
+    accumulateJackpot(bet) {
+      this.jackpots.GRAND += bet * CONFIG.jpContribution.GRAND;
+      this.jackpots.MAJOR += bet * CONFIG.jpContribution.MAJOR;
+      this.jackpots.MINOR += bet * CONFIG.jpContribution.MINOR;
+      this.jackpots.MINI += bet * CONFIG.jpContribution.MINI;
+    }
+
+    async spin() {
+      if (this.isSpinning) return;
+
+      if (this.freeSpins <= 0) {
+        if (this.balance < this.currentBet) {
+          alert('金幣不足！');
+          this.stopAutoSpin();
+          return;
+        }
+        this.balance -= this.currentBet;
+        this.totalMultiplier = 1;
+        this.noFreeCount++; // 普通旋轉時未進 FG 次數 +1
+
+        // 將部分押金累加至 Jackpot 獎池
+        this.accumulateJackpot(this.currentBet);
+      } else {
+        this.freeSpins--;
+      }
+
+      this.isSpinning = true;
+      this.dom.btnSpin.disabled = true;
+      this.dom.betDropdown.disabled = true;
+      this.dom.comboCount.textContent = '0';
+      this.currentWin = 0;
+      this.updateUI();
+
+      await this.fillGridWithAnimation();
+      await this.processGameRound();
+
+      this.cheatMode = null;
+      this.isSpinning = false;
+      this.dom.btnSpin.disabled = false;
+      this.dom.betDropdown.disabled = false;
+      this.updateUI();
+
+      // 自動旋轉處理
+      if (this.isAutoSpin) {
+        if (this.balance >= this.currentBet || this.freeSpins > 0) {
+          setTimeout(() => this.spin(), 500);
+        } else {
+          this.stopAutoSpin();
+        }
+      }
+    }
+
+    async fillGridWithAnimation() {
+      const cells = this.dom.grid.children;
+      let scatterCount = 0;
+
+      for (let col = 0; col < CONFIG.cols; col++) {
+        for (let row = 0; row < CONFIG.rows; row++) {
+          const idx = row * CONFIG.cols + col;
+
+          if (this.cheatMode === 'SCATTER' && scatterCount < 4 && Math.random() < 0.35) {
+            this.gridData[idx] = SYMBOLS.find(s => s.id === 'SCATTER');
+            scatterCount++;
+          } else if (this.cheatMode === 'MULT_500' && idx === 0) {
+            const mult = SYMBOLS.find(s => s.id === 'MULT');
+            this.gridData[idx] = { ...mult, val: 500 };
+          } else if (this.cheatMode === 'EYES') {
+            this.gridData[idx] = SYMBOLS.find(s => s.id === 'S1');
+          } else {
+            this.gridData[idx] = this.getRandomSymbol();
+          }
+
+          const cell = cells[idx];
+          cell.className = 'symbol-cell drop-anim';
+          this.renderCellContent(cell, this.gridData[idx]);
+          this.sound.playSpin();
+        }
+        await this.delay(30);
+      }
+    }
+
+    renderCellContent(cell, item) {
+      cell.innerHTML = '';
+      if (!item) return;
+
+      const img = document.createElement('img');
+      img.src = item.image;
+      img.alt = item.name;
+      img.className = 'symbol-img';
+      cell.appendChild(img);
+
+      if (item.isMultiplier) {
+        const badge = document.createElement('span');
+        badge.className = 'multiplier-badge';
+        badge.textContent = `${item.val}X`;
+        cell.appendChild(badge);
+      }
+    }
+
+    async processGameRound() {
+      let combo = 0;
+      let totalBaseWin = 0;
+
+      // 1. 連鎖消除
+      while (true) {
+        const counts = {};
+        this.gridData.forEach(item => {
+          if (item) counts[item.id] = (counts[item.id] || 0) + 1;
+        });
+
+        const winningIds = [];
+        for (const [id, count] of Object.entries(counts)) {
+          if (count >= 8 && id !== 'SCATTER' && id !== 'MULT') {
+            winningIds.push(id);
+          }
+        }
+
+        if (winningIds.length === 0) break;
+
+        combo++;
+        this.dom.comboCount.textContent = combo;
+        this.sound.playWin(combo);
+        this.shakeScreen();
+
+        let stepWin = 0;
+        winningIds.forEach(id => {
+          const sym = SYMBOLS.find(s => s.id === id);
+          const count = counts[id];
+          let mult = sym.pays[8];
+          if (count >= 12) mult = sym.pays[12];
+          else if (count >= 10) mult = sym.pays[10];
+
+          stepWin += (this.currentBet / 20) * mult;
+        });
+
+        const cells = this.dom.grid.children;
+        this.gridData.forEach((item, idx) => {
+          if (item && winningIds.includes(item.id)) {
+            cells[idx].classList.add('win-glow');
+          }
+        });
+
+        await this.delay(450);
+
+        totalBaseWin += stepWin;
+        // 即時更新「當前消除金額」
+        this.currentWin = totalBaseWin;
+        this.updateUI();
+
+        await this.clearAndDrop(winningIds);
+      }
+
+      // 2. 倍數球計算
+      let roundTotalWin = 0;
+      if (totalBaseWin > 0) {
+        let roundMultiplier = 0;
+        this.gridData.forEach(item => {
+          if (item && item.isMultiplier) {
+            roundMultiplier += item.val;
+          }
+        });
+
+        if (roundMultiplier > 0) {
+          if (this.freeSpins > 0) {
+            this.totalMultiplier += roundMultiplier;
+          } else {
+            this.totalMultiplier = roundMultiplier;
+          }
+        }
+
+        roundTotalWin = totalBaseWin * this.totalMultiplier;
+        // 更新最終乘以倍數後的「當前消除金額」
+        this.currentWin = roundTotalWin;
+        this.updateUI();
+      } else {
+        if (this.freeSpins <= 0) {
+          this.totalMultiplier = 1;
+        }
+      }
+
+      // 3. Progressive Jackpot 彩金判定
+      let jpWin = 0;
+      if (this.cheatMode === 'JACKPOT' || Math.random() < 0.005) {
+        jpWin = await this.triggerJackpot();
+      }
+
+      const finalRoundWin = roundTotalWin + jpWin;
+      if (finalRoundWin > 0) {
+        this.balance += finalRoundWin;
+        if (jpWin <= 0) await this.showBigWin(finalRoundWin);
+      }
+
+      // 4. 檢查 Scatter 與免費遊戲觸發
+      const scatterCount = this.gridData.filter(s => s && s.isScatter).length;
+      if (scatterCount >= 4) {
+        this.sound.playScatter();
+        this.freeSpins += 15;
+        this.noFreeCount = 0; // 成功進 FG，未進 FG 轉數重置為 0
+        this.dom.freeOverlayText.textContent = "獲得 15 次免費旋轉！";
+        await this.showOverlay(this.dom.freeOverlay, 2000);
+      } else if (this.freeSpins > 0 && scatterCount >= 3) {
+        this.sound.playScatter();
+        this.freeSpins += 5;
+        this.dom.freeOverlayText.textContent = "再獲得 +5 次免費旋轉！";
+        await this.showOverlay(this.dom.freeOverlay, 1500);
+      }
+
+      this.updateUI();
+    }
+
+    async triggerJackpot() {
+      const rand = Math.random();
+      let type = 'MINI';
+      if (this.cheatMode === 'JACKPOT') {
+        type = 'GRAND';
+      } else {
+        if (rand < 0.05) type = 'GRAND';
+        else if (rand < 0.20) type = 'MAJOR';
+        else if (rand < 0.50) type = 'MINOR';
+      }
+
+      // 贏得目前累積池中的彩金金額
+      const winAmount = this.jackpots[type];
+      // 該等級 Jackpot 歸零重置為底池金額
+      this.jackpots[type] = CONFIG.jpBase[type];
+
+      this.sound.playBigWin();
+      this.particles.spawnConfetti(120);
+      this.dom.winTitle.textContent = `${type} JACKPOT!`;
+      this.dom.winAmount.textContent = `+${Math.floor(winAmount).toLocaleString()}`;
+
+      await this.showOverlay(this.dom.bigWinOverlay, 2800);
+      return winAmount;
+    }
+
+    async clearAndDrop(winningIds) {
+      const cells = this.dom.grid.children;
+
+      for (let i = 0; i < this.gridData.length; i++) {
+        if (this.gridData[i] && winningIds.includes(this.gridData[i].id)) {
+          cells[i].classList.add('pop-out');
+          this.gridData[i] = null;
+        }
+      }
+
+      await this.delay(200);
+
+      for (let col = 0; col < CONFIG.cols; col++) {
+        let emptySpaces = 0;
+        for (let row = CONFIG.rows - 1; row >= 0; row--) {
+          const idx = row * CONFIG.cols + col;
+          if (this.gridData[idx] === null) {
+            emptySpaces++;
+          } else if (emptySpaces > 0) {
+            const newIdx = (row + emptySpaces) * CONFIG.cols + col;
+            this.gridData[newIdx] = this.gridData[idx];
+            this.gridData[idx] = null;
+          }
+        }
+
+        for (let row = 0; row < emptySpaces; row++) {
+          const idx = row * CONFIG.cols + col;
+          this.gridData[idx] = this.getRandomSymbol();
+        }
+      }
+
+      for (let i = 0; i < this.gridData.length; i++) {
+        const cell = cells[i];
+        cell.className = 'symbol-cell drop-anim';
+        this.renderCellContent(cell, this.gridData[i]);
+      }
+
+      await this.delay(220);
+    }
+
+    shakeScreen() {
+      this.dom.wrapper.style.transform = `translate(${(Math.random()-0.5)*8}px, ${(Math.random()-0.5)*8}px)`;
+      setTimeout(() => this.dom.wrapper.style.transform = 'none', 80);
+    }
+
+    async showBigWin(amount) {
+      if (amount <= 0) return;
+      this.sound.playBigWin();
+      this.particles.spawnConfetti();
+      this.dom.winTitle.textContent = amount >= this.currentBet * 50 ? 'MEGA WIN!' : 'BIG WIN!';
+      this.dom.winAmount.textContent = `+${Math.floor(amount).toLocaleString()}`;
+      await this.showOverlay(this.dom.bigWinOverlay, 2000);
+    }
+
+    showOverlay(overlayElem, duration) {
+      return new Promise(resolve => {
+        overlayElem.classList.add('active');
+        setTimeout(() => {
+          overlayElem.classList.remove('active');
+          resolve();
+        }, duration);
+      });
+    }
+
+    delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    new SlotGame();
+  });
+})();
+</script>
+</body>
+</html>
